@@ -4,9 +4,9 @@
 #include<unistd.h>
 #include<fcntl.h>
 
-char** env_path = NULL;
+//char** env_path = ["/bin","/usr/bin"];
 int env_path_size = 0;
-
+char error_message[30] = "An error has occurred\n";
 
 void internal_exec(char** args);
 void exit_exec();
@@ -29,7 +29,8 @@ int main(int argc, char* argv[]){
 			printf("\ndash>> ");
 			//getline(&line, &allocated, stdin);
 			if (getline(&line, &allocated, stdin) == -1) {
-                		perror("Error reading input");
+				write(STDERR_FILENO, error_message, strlen(error_message));
+
 			}
 
 			line[strcspn(line, "\n")] = 0;
@@ -49,14 +50,14 @@ int main(int argc, char* argv[]){
 
 	else if (argc == 2){
 
-		printf("batch mode\n");
+		//printf("batch mode\n");
 		char* line = NULL;
 		size_t allocated = 0;
 		FILE *batch_file; 
 		batch_file = fopen(argv[1], "r");
 		
 		if(batch_file == NULL){
-			perror("Error reading file input");
+ 			write(STDERR_FILENO, error_message, strlen(error_message));
 		}
 
 		while(getline(&line, &allocated, batch_file) != -1){
@@ -133,14 +134,15 @@ void internal_exec(char** args){
 	int rc = fork();
 	
 	if (rc < 0) {
-        	perror("Fork failed");
+ 		write(STDERR_FILENO, error_message, strlen(error_message));
+
 	}
 	else if( rc == 0 ){
 		execvp(args[0], args);
 	}else{
 	        int wc = wait(NULL);
 		if( wc<0 ){
-			perror("Wait failed");
+			write(STDERR_FILENO, error_message, strlen(error_message));
 		}
 	}
 }
@@ -151,12 +153,17 @@ void exit_exec(){
 
 void cd_exec(char** args){
 	
+	if (args[1] ==  NULL || args[2]!=NULL){
+		write(STDERR_FILENO, error_message, strlen(error_message));
+		return;
+	}
 	chdir(args[1]);	
 }
 
 void path_exec(char** args){
 	
 	if(args[1] == NULL){
+		//loop through env_path and 
 		return;
 	}
 	printf("In path");
@@ -167,13 +174,13 @@ void path_exec(char** args){
 char** getArgs(char* line){
 	
 	char** args = malloc(10 * sizeof(char*));
-
+	
 	char* token;
 	char* saveptr;
 	const char delimiter[] = " ";
 	int index = 0;
 	token = strtok_r(line, delimiter, &saveptr);
-
+	//counter and check if size exceeded, if yes use realloc
 	while(token!=NULL){
 		args[index] = malloc((strlen(token) + 1) * sizeof(char));
 		strcpy(args[index], token);
