@@ -4,11 +4,17 @@
 #include<unistd.h>
 #include<fcntl.h>
 
+/*
+ * Global variables
+ */
 char** env_paths = NULL;
 int env_path_size = 0;
 char error_message[30] = "An error has occurred\n";
 int redirection_present = -1; //check if redirection is present
 
+/*
+ * Function decalarations
+ */
 void internal_exec(char** args);
 void exit_exec();
 void cd_exec(char** args);
@@ -26,19 +32,22 @@ int main(int argc, char* argv[]){
 		char *myargs[2];
 
 		while(1){
-		
+			
+			//interactive mode
 			printf("\ndash>> ");
-			//getline(&line, &allocated, stdin);
+			
+			//get input and check for error
 			if (getline(&line, &allocated, stdin) == -1) {
 				write(STDERR_FILENO, error_message, strlen(error_message));
 			}
 
 			line[strcspn(line, "\n")] = 0;
-			
+
+			//check if parallel commands are present
 			int ps = parallel_cmd_check(line);
 			
 			if(ps == 0){
-				//printf("Inside ps check in main");
+				
 				parallel_exec(line);
 			}
 			else{
@@ -50,7 +59,7 @@ int main(int argc, char* argv[]){
 
 	else if (argc == 2){
 
-		//printf("batch mode\n");
+		//batch mode
 		char* line = NULL;
 		size_t allocated = 0;
 		FILE *batch_file; 
@@ -84,13 +93,18 @@ int main(int argc, char* argv[]){
 }
 
 int parallel_cmd_check(char* line){
-
+	
+	//check is parallel operator is present in the input line
 	if (strstr(line,"&")!=NULL){
                	return 0;
         }
         return -1;
 }
 
+/*
+ * Function to perform parallel execution of commands. Controls flow of parallel command execution
+ * Void function
+ */
 void parallel_exec(char* line){
 
         char* token;
@@ -100,6 +114,8 @@ void parallel_exec(char* line){
 
         while(token!=NULL){
                 
+		//execute as and when command is received
+
 		char** args = getArgs(token);
 		internal_exec(args);		
 	
@@ -115,6 +131,10 @@ void parallel_exec(char* line){
         }
 }
 
+/*
+ *Function to execute specified internal commands and handle any external command that may be given as input.
+ *void function
+ */
 void internal_exec(char** args){
 	
 	
@@ -149,10 +169,16 @@ void internal_exec(char** args){
 	}
 }
 
+/*
+ *Exit command execution function. Exitting from dash program
+ */
 void exit_exec(){
 	exit(0);
 }
 
+/*
+ * cd command execution. 
+ */
 void cd_exec(char** args){
 	
 	if (args[1] ==  NULL || args[2]!=NULL){
@@ -162,25 +188,36 @@ void cd_exec(char** args){
 	chdir(args[1]);	
 }
 
+/*
+ * path command execution.
+ */
 void path_exec(char** args){
 	
+	int i;
+
+	for(i=0;i<env_path_size;i++){
+		free(env_paths[i]);
+	}
+	free(env_paths);
+	
 	if(args[1] == NULL){
+		env_paths = NULL;
 		env_path_size=0;		 
 		return;
 	}
 
 	env_path_size=0;
-	int i;
 	int j=0;
 	for (i=0; args[i] != NULL; i++){
 		env_paths[env_path_size] = strdup(args[i]);
 		env_path_size++;
 	}
-	//printf("In path");
 }
 
 
-
+/*
+ * Function to tokenize and get back the args from the given input. 
+ */
 char** getArgs(char* line){
 	
 	char** args = malloc(10 * sizeof(char*));
