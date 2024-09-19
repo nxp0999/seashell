@@ -4,9 +4,10 @@
 #include<unistd.h>
 #include<fcntl.h>
 
-//char** env_path = ["/bin","/usr/bin"];
+char** env_paths = NULL;
 int env_path_size = 0;
 char error_message[30] = "An error has occurred\n";
+int redirection_present = -1; //check if redirection is present
 
 void internal_exec(char** args);
 void exit_exec();
@@ -30,7 +31,6 @@ int main(int argc, char* argv[]){
 			//getline(&line, &allocated, stdin);
 			if (getline(&line, &allocated, stdin) == -1) {
 				write(STDERR_FILENO, error_message, strlen(error_message));
-
 			}
 
 			line[strcspn(line, "\n")] = 0;
@@ -116,7 +116,9 @@ void parallel_exec(char* line){
 }
 
 void internal_exec(char** args){
-
+	
+	
+	
 	if (strcmp(args[0], "exit")==0){
 		exit_exec();
 	}
@@ -163,10 +165,18 @@ void cd_exec(char** args){
 void path_exec(char** args){
 	
 	if(args[1] == NULL){
-		//loop through env_path and 
+		env_path_size=0;		 
 		return;
 	}
-	printf("In path");
+
+	env_path_size=0;
+	int i;
+	int j=0;
+	for (i=0; args[i] != NULL; i++){
+		env_paths[env_path_size] = strdup(args[i]);
+		env_path_size++;
+	}
+	//printf("In path");
 }
 
 
