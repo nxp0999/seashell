@@ -1,3 +1,4 @@
+#include <sys/wait.h>
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
@@ -29,7 +30,7 @@ int main(int argc, char* argv[]){
 
 		char* line = NULL;
 		size_t allocated = 0;
-		char *myargs[2];
+		//char *myargs[2];
 
 		while(1){
 			
@@ -207,7 +208,7 @@ void path_exec(char** args){
 	}
 
 	env_path_size=0;
-	int j=0;
+	//int j=0;
 	for (i=0; args[i] != NULL; i++){
 		env_paths[env_path_size] = strdup(args[i]);
 		env_path_size++;
