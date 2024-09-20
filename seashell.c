@@ -34,7 +34,7 @@ int main(int argc, char* argv[]){
 
 		char* line = NULL;
 		size_t allocated = 0;
-		//char *myargs[2];
+		char *myargs[2];
 
 		while(1){
 			
@@ -192,7 +192,10 @@ void cd_exec(char** args){
 		write(STDERR_FILENO, error_message, strlen(error_message));
 		return;
 	}
-	chdir(args[1]);	
+	
+	if (chdir(args[1]) == -1){
+		write(STDERR_FILENO, error_message, strlen(error_message));
+	}
 }
 
 /*
