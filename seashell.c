@@ -25,6 +25,10 @@ void parallel_exec(char* line);
 
 int main(int argc, char* argv[]){
 	
+	if (argc > 2){
+		write(STDERR_FILENO, error_message, strlen(error_message));
+	}
+
 	if (argc == 1 ){
 
 		char* line = NULL;
@@ -39,6 +43,7 @@ int main(int argc, char* argv[]){
 			//get input and check for error
 			if (getline(&line, &allocated, stdin) == -1) {
 				write(STDERR_FILENO, error_message, strlen(error_message));
+				continue;
 			}
 
 			line[strcspn(line, "\n")] = 0;
@@ -67,6 +72,7 @@ int main(int argc, char* argv[]){
 		
 		if(batch_file == NULL){
  			write(STDERR_FILENO, error_message, strlen(error_message));
+			exit(1);
 		}
 
 		while(getline(&line, &allocated, batch_file) != -1){
@@ -220,7 +226,8 @@ void path_exec(char** args){
  */
 char** getArgs(char* line){
 	
-	char** args = malloc(10 * sizeof(char*));
+	int allocated_size = 10;
+	char** args = malloc(allocated_size * sizeof(char*));
 	
 	char* token;
 	char* saveptr;
@@ -229,6 +236,12 @@ char** getArgs(char* line){
 	token = strtok_r(line, delimiter, &saveptr);
 	//counter and check if size exceeded, if yes use realloc
 	while(token!=NULL){
+
+		if(index > allocated_size - 1){
+			allocated_size += 10;
+			char** temp = realloc(args, allocated_size * sizeof(char*));
+		}
+		
 		args[index] = malloc((strlen(token) + 1) * sizeof(char));
 		strcpy(args[index], token);
 		index++;
